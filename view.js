@@ -50,11 +50,13 @@ function createSpeechGrammerList(phrases) {
 }
 
 function expandPieceName(move) {
-	return move.split('N').join('knight ')
-	.split('B').join('bishop ')
-	.split('R').join('rook ')
-	.split('Q').join('queen ')
-	.split('K').join('king ');
+	var first = move[0];
+	return (first === 'K' ? 'King ' :
+	first === 'N' ? 'Knight ' :
+	first === 'B' ? 'Bishop ' :
+	first === 'R' ? 'Rook ' :
+	first === 'Q' ? 'Queen ' :
+	first) + move.slice(1);
 }
 
 function expandMoveResult(move) {
@@ -65,7 +67,15 @@ function expandMoveResult(move) {
 function expandTakes(move) {
 	var parts = move.split('x').join(' takes ').split(' ');
 	var last = parts.pop().toUpperCase();
-	return parts.join(' ') + last;
+	return parts.join(' ') + (parts.length ? ' ' + last : last);
+}
+
+function uniques(arr) {
+    var a = [];
+    for (var i=0, l=arr.length; i<l; i++)
+        if (a.indexOf(arr[i]) === -1 && arr[i] !== '')
+            a.push(arr[i]);
+    return a;
 }
 
 function getSpokenAlternatives(move) {
@@ -74,17 +84,17 @@ function getSpokenAlternatives(move) {
 		alternatives.push(move.toUpperCase());
 	} else {
 		move = expandPieceName(expandTakes(move));
-		alternatives.push(move);
+		alternatives.push(move.split('+').join('').split('#').join(''));
 		alternatives.push(expandMoveResult(move));
 	}
 
-	return alternatives;
+	return uniques(alternatives);
 }
 
 state.snoop('possibleNextMoves', function(possibleNextMoves) {
 	// update speech recognition grammar list
 	var waysToSayThePossibleNextMoves = [].concat.apply([], possibleNextMoves.map(getSpokenAlternatives));
-	console.log(waysToSayThePossibleNextMoves);
+	console.log('Ways to say the possible next moves:', waysToSayThePossibleNextMoves);
 	recognition.grammars = createSpeechGrammerList(waysToSayThePossibleNextMoves);
 });
 
@@ -103,9 +113,8 @@ document.body.onclick = function() {
 };
 
 function fixMove(move) {
-	if (move.length === 2) {
-		return move.toLowerCase();
-	} else {
+	move = move.toLowerCase();
+	if (move.length > 2) {
 		move = move.split(' takes ').join('x');
 		move = move.split(' check').join('+');
 		move = move.split(' checkmate').join('#');
@@ -127,7 +136,21 @@ recognition.onresult = function(event) {
 	// These also have getters so they can be accessed like arrays.
 	// The second [0] returns the SpeechRecognitionAlternative at position 0.
 	// We then return the transcript property of the SpeechRecognitionAlternative object 
-	var move = fixMove(event.results[0][0].transcript);
+	var speechAlternatives = [].map.call(event.results[0], function(alternative) {
+		return fixMove(alternative.transcript);
+	});
+
+	// loop through guesses as to what was spoken
+	var move;
+	for (var i = 1; i < speechAlternatives.length; i++) {
+		// if this guess as to what was spoken is one of the move options
+		if (state.possibleNextMoves.indexOf(speechAlternatives[i]) >= 0) {
+			move = speechAlternatives[i];
+			break;
+		}
+	}
+	move = move || speechAlternatives[0];
+
 	diagnostic.textContent = 'Result received: ' + move + '.';
 
 	// make move and update PGN in state
