@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>PGN fixer</title>
+	<link rel="stylesheet" href="pgn-fixer.css">
+</head>
+<body>
+	<h1>PGN fixer</h1>
+
+	<h2>Paste your PGN:</h2>
+	<textarea cols="60" rows="10" id="pgn-input"></textarea>
+
+	<h2 class="validity-message">Your PGN is<span class="hidden-when-valid"> not</span> valid!</h2>
+	<h2>Here it is fixed up:</h2>
+	<textarea cols="60" rows="10" id="pgn-output"></textarea>
+
+
+    <h1>Speech color changer</h1>
+
+    <p>Tap/click then say a color to change the background color of the app.</p>
+    <div>
+        <p class="output"><em>...diagnostic messages</em></p>
+    </div>
+
+
+	<script src="chess.js"></script>
+	<script src="helpers.js"></script>
+
+	<!-- for observable objects (works well with DOM-Builder to enable live DOM updates) -->
+	<script src="snoopy/snoopy.js"></script>
+
+	<!-- for building the DOM (rendering HTML) -->
+	<script src="DOM-Builder/dom.js"></script>
+
+	<!-- Speach recognition -->
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/annyang/2.2.1/annyang.min.js"></script>
+
+	<script src="pgn-fixer.js"></script>
+
+	<script src="view.js"></script>
+</body>
+</html>

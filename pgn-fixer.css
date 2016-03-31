@@ -1,0 +1,7 @@
+body .validity-message {
+	color: red;
+}
+
+body.validPGN .validity-message {
+	color: green;
+}
